@@ -67,7 +67,7 @@ export default {
           sent++;
         } catch (e) {
           failed++;
-          lastErr = String(e.status || e.message || e);
+          lastErr = (e && e.message) ? e.message : String(e.status || e);
           if (e.status === 410 || e.status === 404) await env.PUSH_SUBS.delete(name);
         }
       }));
@@ -144,7 +144,9 @@ async function sendWebPush(sub, payloadStr, vapidJwk, vapidPubKey) {
   });
 
   if (!res.ok && res.status !== 201) {
-    const e = new Error(`push ${res.status}`);
+    let detail = '';
+    try { detail = (await res.text()).replace(/\s+/g, ' ').slice(0, 100); } catch (_) {}
+    const e = new Error(`${res.status}${detail ? ' ' + detail : ''}`);
     e.status = res.status;
     throw e;
   }
