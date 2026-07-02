@@ -1,0 +1,8 @@
+name = "jolly-sky-df6b"
+main = "cloudflare-worker.js"
+compatibility_date = "2025-01-01"
+
+# 通知購読データの保管庫（KV）。自動デプロイ時もこの設定でバインドされる。
+[[kv_namespaces]]
+binding = "PUSH_SUBS"
+id = "03c5ade211474ca2ac0b2e94ec0606ac"
