@@ -68,7 +68,8 @@ export default {
         } catch (e) {
           failed++;
           lastErr = (e && e.message) ? e.message : String(e.status || e);
-          if (e.status === 410 || e.status === 404) await env.PUSH_SUBS.delete(name);
+          // 失効・鍵不一致の購読は掃除する（該当端末は起動時の自動再購読で復活する）
+          if (e.status === 410 || e.status === 404 || e.status === 403) await env.PUSH_SUBS.delete(name);
         }
       }));
 
