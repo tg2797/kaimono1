@@ -1,5 +1,8 @@
 /* 買い物チェックリスト サービスワーカー */
 
+self.addEventListener('install', () => self.skipWaiting());
+self.addEventListener('activate', event => event.waitUntil(self.clients.claim()));
+
 self.addEventListener('push', event => {
   if (!event.data) return;
   let data;
@@ -8,12 +11,12 @@ self.addEventListener('push', event => {
 
   const opts = {
     body: data.body || '',
-    icon: '/apple-touch-icon.png',
-    badge: '/favicon-32.png',
+    icon: './apple-touch-icon.png',
+    badge: './favicon-32.png',
     tag: 'kaimono',
     renotify: true,
     vibrate: [200, 100, 200],
-    data: { url: self.location.origin + '/' },
+    data: { url: self.registration.scope },
   };
   event.waitUntil(
     self.registration.showNotification(data.title || '買い物チェックリスト', opts)
@@ -22,11 +25,11 @@ self.addEventListener('push', event => {
 
 self.addEventListener('notificationclick', event => {
   event.notification.close();
-  const url = event.notification.data?.url || self.location.origin + '/';
+  const url = (event.notification.data && event.notification.data.url) || self.registration.scope;
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
       for (const c of list) {
-        if ('focus' in c) { c.focus(); return; }
+        if (c.url.startsWith(self.registration.scope) && 'focus' in c) { c.focus(); return; }
       }
       return clients.openWindow(url);
     })
