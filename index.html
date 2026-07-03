@@ -266,35 +266,37 @@ async function initPush(){
     await navigator.serviceWorker.ready;
   }catch(e){ console.warn("SW登録失敗",e); }
 }
-async function subscribePush(){
-  if(!roomId){ toast("先に同期ルームを設定してください"); return; }
+async function subscribePush(silent){
+  const say=m=>{ if(!silent) toast(m); };
+  if(!roomId){ say("先に同期ルームを設定してください"); return; }
   if(!("serviceWorker" in navigator)||typeof Notification==="undefined"){
-    toast("このブラウザは通知に非対応です"); return;
+    say("このブラウザは通知に非対応です"); return;
   }
   // iOS は requestPermission をタップ直後に呼ぶ必要があるので最初に実行
   let perm;
   try{ perm=await Notification.requestPermission(); }
-  catch(e){ toast("通知の許可を取得できませんでした"); return; }
-  if(perm!=="granted"){ toast("通知が許可されていません。iPhoneの「設定」→このアプリ→通知を確認してください"); return; }
+  catch(e){ say("通知の許可を取得できませんでした"); return; }
+  if(perm!=="granted"){ say("通知が許可されていません。iPhoneの「設定」→このアプリ→通知を確認してください"); return; }
   if(!swReg) await initPush();
-  if(!swReg){ toast("通知の初期化に失敗しました。再読み込みして試してください"); return; }
-  if(!swReg.pushManager){ toast("ホーム画面に追加したアプリから開いてください"); return; }
+  if(!swReg){ say("通知の初期化に失敗しました。再読み込みして試してください"); return; }
+  if(!swReg.pushManager){ say("ホーム画面に追加したアプリから開いてください"); return; }
   try{
     let sub=await swReg.pushManager.getSubscription();
     if(sub){ try{ await sub.unsubscribe(); }catch(_){ } sub=null; } // 古い鍵の購読を破棄して作り直す
     sub=await swReg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlB64ToArr(VAPID_PUBLIC_KEY)});
     const res=await fetch(`${WORKER_URL}/subscribe`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({roomId,deviceId,subscription:sub.toJSON()})});
-    if(res.ok) toast("プッシュ通知を有効にしました 🔔");
-    else toast("通知サーバーへの登録に失敗（"+res.status+"）");
-  }catch(e){ console.warn("Push subscribe",e); toast("購読エラー: "+e.message); }
+    if(res.ok) say("プッシュ通知を有効にしました 🔔");
+    else say("通知サーバーへの登録に失敗（"+res.status+"）");
+  }catch(e){ console.warn("Push subscribe",e); say("購読エラー: "+e.message); }
 }
 function notifyPartner(body){
   if(!WORKER_URL||!roomId) return;
   fetch(`${WORKER_URL}/notify`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({roomId,senderDeviceId:deviceId,payload:JSON.stringify({title:"買い物チェックリスト",body})})}).catch(()=>{});
 }
 function autoResubscribe(){
-  // 既に許可済みのときだけ、新しいルーム用に購読を静かに再登録する
-  if(typeof Notification!=="undefined"&&Notification.permission==="granted") subscribePush();
+  // 既に許可済みのときだけ、購読を静かに登録し直す（鍵更新後の自己修復）
+  if(!roomId) return;
+  if(typeof Notification!=="undefined"&&Notification.permission==="granted") subscribePush(true);
 }
 async function sendTestPush(){
   if(!roomId){ toast("先に同期ルームを設定してください"); return; }
@@ -313,6 +315,13 @@ async function sendTestPush(){
 /* ローカル保存 */
 function loadLocal(){
   try{ lists=JSON.parse(localStorage.getItem("kaimono_lists"))||[]; }catch(e){ lists=[]; }
+  if(!Array.isArray(lists)) lists=[];
+  // データ正規化＋期限切れトゥームストーンの掃除
+  lists=lists.filter(l=>l&&l.id&&(!l._del||(Date.now()-(l._delAt||0))<PURGE_MS));
+  for(const l of lists){
+    if(!Array.isArray(l.items)) l.items=[];
+    l.items=l.items.filter(i=>i&&i.id&&(!i._del||(Date.now()-(i._delAt||0))<PURGE_MS));
+  }
   if(lists.length===0){
     try{
       const old=JSON.parse(localStorage.getItem("kaimono_items")||"[]");
@@ -324,8 +333,10 @@ function saveLocal(){ localStorage.setItem("kaimono_lists",JSON.stringify(lists)
 
 /* マージ */
 function mergeItems(loc,rem){
+  if(!Array.isArray(loc)) loc=[];
+  if(!Array.isArray(rem)) rem=[];
   const byId={};
-  for(const r of rem) byId[r.id]=r;
+  for(const r of rem){ if(r&&r.id) byId[r.id]=r; }
   for(const l of loc){ if(!byId[l.id]||(l.at||0)>(byId[l.id].at||0)) byId[l.id]=l; }
   return Object.values(byId).filter(i=>!i._del||(Date.now()-(i._delAt||0))<PURGE_MS);
 }
@@ -339,7 +350,7 @@ function applyRemote(data){
   const prevListIds=new Set(lists.filter(l=>!l._del).map(l=>l.id));
   for(const l of lists) for(const it of l.items) if(!it._del) prevItemIds.add(it.id);
   const byId={};
-  for(const r of data.lists) byId[r.id]=r;
+  for(const r of data.lists){ if(!r||!r.id) continue; if(!Array.isArray(r.items)) r.items=[]; byId[r.id]=r; }
   for(const l of lists){
     if(!byId[l.id]) byId[l.id]=l;
     else byId[l.id]={...((l.at||0)>(byId[l.id].at||0)?l:byId[l.id]), items:mergeItems(l.items,byId[l.id].items)};
@@ -389,7 +400,11 @@ async function startSync(){
   mqttClient.on("offline",()=>{ CLOUD=false; $("syncdot").classList.remove("on"); });
 }
 function stopSync(){ if(mqttClient){mqttClient.end();mqttClient=null;} CLOUD=false; $("syncdot").classList.remove("on"); }
-document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible"&&roomId&&!mqttClient) startSync(); });
+document.addEventListener("visibilitychange",()=>{
+  if(document.visibilityState!=="visible"||!roomId) return;
+  if(!mqttClient) startSync();
+  else if(!mqttClient.connected){ try{ mqttClient.reconnect(); }catch(_){ } } // 復帰直後に即再接続（5秒待ちを回避）
+});
 
 /* データ操作 */
 function addItem(name){
@@ -424,15 +439,14 @@ function checkAutoArchive(){
 function removeItem(id){
   const l=currentList(); if(!l) return;
   const it=l.items.find(x=>x.id===id);
-  if(it&&CLOUD){it._del=true;it._delAt=Date.now();it.at=Date.now();}
-  else{l.items=l.items.filter(x=>x.id!==id);}
+  // 常にトゥームストーン方式（オフライン削除が同期マージで復活しないように）
+  if(it){it._del=true;it._delAt=Date.now();it.at=Date.now();}
   l.at=Date.now(); saveLocal(); renderList(); mqttPublish();
 }
 function clearCompleted(){
   const l=currentList(); if(!l) return;
   const now=Date.now();
-  if(CLOUD){l.items.filter(i=>i.checked).forEach(i=>{i._del=true;i._delAt=now;i.at=now;});}
-  else{l.items=l.items.filter(i=>!i.checked);}
+  l.items.filter(i=>i.checked&&!i._del).forEach(i=>{i._del=true;i._delAt=now;i.at=now;});
   l.at=now; saveLocal(); renderList(); mqttPublish();
 }
 function sorted(){
@@ -485,9 +499,12 @@ function getSuggestions(){
   const cur=currentList();
   const curNames=new Set((cur?.items||[]).filter(i=>!i._del).map(i=>i.name.toLowerCase()));
   const freq={};
-  for(const l of lists) for(const it of l.items){
-    if(it._del||!it.name) continue;
-    const n=it.name.trim(); freq[n]=(freq[n]||0)+1;
+  for(const l of lists){
+    if(l._del) continue; // 削除済みリストの項目は候補に出さない
+    for(const it of l.items){
+      if(it._del||!it.name) continue;
+      const n=it.name.trim(); freq[n]=(freq[n]||0)+1;
+    }
   }
   return Object.entries(freq).filter(([n])=>!curNames.has(n.toLowerCase())).sort((a,b)=>b[1]-a[1]).slice(0,3).map(([n])=>n);
 }
@@ -566,6 +583,8 @@ function openList(id){
 }
 function goHome(){
   currentListId=null;
+  $("inp").blur();
+  $("listScreen").classList.remove("kb-open");
   $("listScreen").classList.add("off");
   $("homeScreen").classList.remove("off");
   document.body.classList.remove("on-list");
@@ -651,7 +670,7 @@ listsWrap.addEventListener("click",e=>{
   if(act==="listdel"){
     if(confirm("このリストを削除しますか？")){
       const l=lists.find(x=>x.id===listid);
-      if(l&&CLOUD){l._del=true;l._delAt=Date.now();l.at=Date.now();}else{lists=lists.filter(x=>x.id!==listid);}
+      if(l){l._del=true;l._delAt=Date.now();l.at=Date.now();}
       saveLocal(); mqttPublish(); renderHome();
     }
     return;
@@ -671,7 +690,7 @@ listsWrap.addEventListener("click",e=>{
 /* 追加バー */
 function quickAdd(){const inp=$("inp"),v=inp.value.trim();if(!v)return;addItem(v);inp.value="";inp.focus();}
 $("addBtn").addEventListener("click",quickAdd);
-$("inp").addEventListener("keydown",e=>{if(e.key==="Enter")quickAdd();});
+$("inp").addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.isComposing&&e.keyCode!==229)quickAdd();});
 window.addEventListener("scroll",()=>{$("homeNav").classList.toggle("scrolled",window.scrollY>30);$("listNav").classList.toggle("scrolled",window.scrollY>30);},{passive:true});
 
 /* iOSキーボード対応：リスト画面を可視領域の高さに合わせる（入力バーは常にキーボード直上に固定） */
@@ -719,7 +738,7 @@ $("fabBtn").addEventListener("click",()=>{
     <button class="btn sub" data-act="close">キャンセル</button>
   `);
   const inp=$("newListName"); inp.focus();
-  inp.addEventListener("keydown",e=>{if(e.key==="Enter")$("createListBtn").click();});
+  inp.addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.isComposing&&e.keyCode!==229)$("createListBtn").click();});
   $("createListBtn").addEventListener("click",()=>{
     const name=($("newListName")?.value||"").trim()||"新しいリスト";
     const l={id:newId(),name,items:[],createdAt:Date.now(),at:Date.now()};
@@ -744,7 +763,7 @@ $("editListBtn").addEventListener("click",()=>{
     <button class="btn sub" data-act="close">キャンセル</button>
   `);
   const inp=$("editListName"); inp.focus(); inp.select();
-  inp.addEventListener("keydown",e=>{if(e.key==="Enter")$("saveNameBtn").click();});
+  inp.addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.isComposing&&e.keyCode!==229)$("saveNameBtn").click();});
   $("saveNameBtn").addEventListener("click",()=>{
     const name=($("editListName")?.value||"").trim(); if(!name) return;
     l.name=name; l.at=Date.now();
@@ -753,7 +772,7 @@ $("editListBtn").addEventListener("click",()=>{
   });
   $("delListBtn").addEventListener("click",()=>{
     if(confirm(`「${l.name}」を削除しますか？`)){
-      if(CLOUD){l._del=true;l._delAt=Date.now();l.at=Date.now();}else{lists=lists.filter(x=>x.id!==l.id);}
+      l._del=true;l._delAt=Date.now();l.at=Date.now();
       saveLocal(); mqttPublish(); closeSheet(); goHome();
     }
   });
@@ -879,7 +898,7 @@ loadLocal();
 sweepAutoArchive();
 renderHome();
 if(roomId) startSync();
-initPush();
+initPush().then(()=>autoResubscribe()); // 起動時に購読を自己修復（古い鍵の購読を自動で作り直す）
 </script>
 </body>
 </html>
