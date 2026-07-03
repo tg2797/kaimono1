@@ -12,6 +12,7 @@
 <link rel="icon" href="favicon-32.png" sizes="32x32" type="image/png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="manifest" href="manifest.webmanifest">
+<script>try{var _t=localStorage.getItem('kaimono_theme')||'auto';if(_t==='dark'||(_t==='auto'&&window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches))document.documentElement.classList.add('dark');}catch(e){}</script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 html,body{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Hiragino Sans",sans-serif;background:#FFF5F8;color:#1C1C1E;-webkit-font-smoothing:antialiased;min-height:100vh;}
@@ -83,7 +84,7 @@ body.on-list{overflow:hidden;}
 .delbg{position:absolute;inset:0;display:flex;justify-content:flex-end;align-items:stretch;background:#FF3B30;}
 .delbtn{width:72px;border:none;background:transparent;color:#fff;font-size:15px;font-weight:600;height:100%;}
 .delbtn:active{background:rgba(0,0,0,.12);}
-.row{position:relative;z-index:1;background:#FFFFFF;display:flex;align-items:center;gap:13px;padding:13px 16px;min-height:56px;border-bottom:0.5px solid #F2E6EC;touch-action:pan-y;will-change:transform;}
+.row{position:relative;z-index:1;background:#FFFFFF;display:flex;align-items:center;gap:13px;padding:13px 16px;min-height:56px;border-bottom:0.5px solid #F2E6EC;touch-action:pan-y;will-change:transform;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;}
 .cell:last-child .row{border-bottom:none;}
 .check{width:27px;height:27px;border-radius:50%;flex:0 0 auto;border:2.5px solid #FFC2D8;background:#FFFFFF;display:flex;align-items:center;justify-content:center;transition:background .2s,border-color .2s;}
 .check.on{background:#FF3B81;border-color:#FF3B81;}
@@ -149,6 +150,75 @@ body.on-list{overflow:hidden;}
 .gap{height:10px;}
 .divider{text-align:center;color:#C2B2BA;font-size:13px;margin:14px 0;}
 .off{display:none;}
+
+/* スナックバー（削除のUndo用） */
+.snackbar{position:fixed;left:16px;right:16px;bottom:calc(90px + env(safe-area-inset-bottom));z-index:250;display:flex;align-items:center;justify-content:space-between;gap:12px;background:rgba(40,36,44,.97);color:#fff;padding:12px 12px 12px 18px;border-radius:14px;box-shadow:0 8px 30px rgba(0,0,0,.3);font-size:14px;font-weight:500;opacity:0;transform:translateY(16px);pointer-events:none;transition:opacity .25s,transform .25s;max-width:520px;margin:0 auto;}
+.snackbar.show{opacity:1;transform:translateY(0);pointer-events:auto;}
+.snackbar button{flex:0 0 auto;border:none;background:transparent;color:#FF8FB6;font-size:14px;font-weight:700;padding:6px 10px;border-radius:8px;}
+.snackbar button:active{background:rgba(255,255,255,.12);}
+
+/* メモ欄 */
+.memo-wrap{padding:14px 16px 0;}
+.memo-card{background:#FFFFFF;border-radius:16px;padding:12px 14px;box-shadow:0 1px 0 rgba(0,0,0,.02),0 10px 30px rgba(255,59,129,.06);}
+.memo-label{font-size:12px;color:#A8949D;font-weight:600;margin-bottom:6px;}
+.memo-card textarea{width:100%;border:none;background:transparent;outline:none;resize:none;font-size:16px;line-height:1.5;color:#1C1C1E;min-height:44px;}
+.memo-card textarea::placeholder{color:#C9B8C0;}
+
+/* QRコード */
+.qrbox{background:#FFFFFF;border-radius:14px;padding:14px;display:flex;flex-direction:column;align-items:center;gap:8px;margin-bottom:12px;}
+.qrbox img{width:200px;height:200px;display:block;border-radius:8px;background:#fff;}
+.qrbox .qrnote{font-size:12px;color:#A8949D;text-align:center;}
+
+/* 並び替え（長押しドラッグ） */
+.cell.dragging{z-index:20;position:relative;}
+.cell.dragging .row{transform:scale(1.03);box-shadow:0 12px 32px rgba(0,0,0,.18);border-radius:14px;background:#FFFFFF;opacity:.98;transition:transform .16s ease,box-shadow .16s ease;}
+.cell.drag-shift{transition:transform .2s cubic-bezier(.2,.8,.2,1);}
+.list-dragging{cursor:grabbing;}
+
+/* テーマ切替（設定内） */
+.theme-seg{display:flex;background:#FFF0F4;border-radius:12px;padding:4px;gap:4px;}
+.theme-seg button{flex:1;border:none;background:transparent;padding:10px;border-radius:9px;font-size:14px;font-weight:600;color:#A8949D;}
+.theme-seg button.on{background:#FF3B81;color:#fff;}
+
+/* ── ダークモード ── */
+html.dark body{background:#15111A;color:#EDE8EC;}
+html.dark .navbar.scrolled{background:rgba(28,22,34,.82);border-bottom-color:#2E2636;}
+html.dark .navbtn{background:#2A2333;box-shadow:0 1px 4px rgba(0,0,0,.3);}
+html.dark .navbtn:active{background:#332A3D;}
+html.dark .hero .sub{color:#9E8FA0;}
+html.dark .list-cards-box,html.dark .card,html.dark .lcard,html.dark .cell,html.dark .row,html.dark .memo-card,html.dark .qrbox{background:#221C2B;}
+html.dark .cell.dragging .row{background:#2A2333;}
+html.dark .lcard{border-bottom-color:#2E2636;}
+html.dark .lcard:active{background:#2A2333;}
+html.dark .row{border-bottom-color:#2E2636;}
+html.dark .lcard-icon{background:#332A3D;}
+html.dark .lcard-count,html.dark .memo-label,html.dark .qrbox .qrnote,html.dark .lcard-arr{color:#9E8FA0;}
+html.dark .lcard-date{color:#7C6E82;}
+html.dark .home-empty,html.dark .empty{color:#8A7C90;}
+html.dark .home-empty .t,html.dark .empty .t{color:#C9BCCE;}
+html.dark .home-bottom{background:rgba(28,22,34,.94);border-top-color:#2E2636;}
+html.dark .row.done .iname{color:#6E6672;}
+html.dark .check{border-color:#5A3348;background:#221C2B;}
+html.dark .by{color:#8A7C90;}
+html.dark .addbar{background:rgba(28,22,34,.9);border-top-color:#2E2636;}
+html.dark .addbar input,html.dark .memo-card textarea{color:#EDE8EC;}
+html.dark .addbar input{background:#2A2333;box-shadow:0 2px 10px rgba(0,0,0,.25);}
+html.dark .addbar input::placeholder,html.dark .memo-card textarea::placeholder{color:#7C6E82;}
+html.dark .suggest-lbl{color:#9E8FA0;}
+html.dark .suggest-chip{background:#332A3D;border-color:#5A3348;color:#FF8FB6;}
+html.dark .suggest-chip:active{background:#3D3247;}
+html.dark .sheet{background:#221C2B;}
+html.dark .field label{color:#9E8FA0;}
+html.dark .field input,html.dark .syncbox,html.dark .roomcode,html.dark .theme-seg{background:#2E2636;color:#EDE8EC;}
+html.dark .syncbox.on{background:#3A2A38;}
+html.dark .hint{color:#B7A6B4;}
+html.dark .btn.ghost{background:#332A3D;}
+html.dark .btn.ghost:active{background:#3D3247;}
+html.dark .btn.sub{color:#9E8FA0;}
+html.dark .divider{color:#8A7C90;}
+html.dark .theme-seg button{color:#9E8FA0;}
+html.dark .theme-seg button.on{color:#fff;}
+
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;}}
 </style>
 </head>
@@ -210,7 +280,7 @@ body.on-list{overflow:hidden;}
     <div class="sub" id="sub">リストはまだ空です</div>
   </div>
   <div id="suggestBar"></div>
-  <div class="list-wrap"><div id="list"></div></div>
+  <div class="list-wrap"><div id="list"></div><div id="memoWrap" class="memo-wrap"></div></div>
   <div class="addbar">
     <input id="inp" type="text" placeholder="追加するものを入力" enterkeyhint="done"
            autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
@@ -219,6 +289,7 @@ body.on-list{overflow:hidden;}
 </div>
 
 <div id="toast" class="toast"></div>
+<div id="snackbar" class="snackbar"><span id="snackText"></span><button id="snackBtn" type="button">元に戻す</button></div>
 <div class="overlay" id="overlay"><div class="sheet" id="sheet"></div></div>
 
 <script>
@@ -252,6 +323,25 @@ function mqttTopic(){ return `kaimono-app/${roomId}/data`; }
 /* トースト */
 let toastTimer;
 function toast(msg){ const el=$("toast"); el.textContent=msg; el.classList.add("show"); clearTimeout(toastTimer); toastTimer=setTimeout(()=>el.classList.remove("show"),2500); }
+
+/* スナックバー（削除のUndo） */
+let snackTimer=null, snackAction=null;
+function snackbar(text,action,ms){
+  $("snackText").textContent=text; snackAction=action||null;
+  const sb=$("snackbar"); sb.classList.add("show");
+  clearTimeout(snackTimer); snackTimer=setTimeout(()=>{ sb.classList.remove("show"); snackAction=null; },ms||5000);
+}
+$("snackBtn").addEventListener("click",()=>{ const a=snackAction; snackAction=null; clearTimeout(snackTimer); $("snackbar").classList.remove("show"); if(a) a(); });
+
+/* テーマ（ライト/ダーク/自動） */
+function applyTheme(){
+  let t="auto"; try{ t=localStorage.getItem("kaimono_theme")||"auto"; }catch(e){}
+  const dark=t==="dark"||(t==="auto"&&window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches);
+  document.documentElement.classList.toggle("dark",dark);
+  const meta=document.querySelector('meta[name="theme-color"]'); if(meta) meta.setAttribute("content",dark?"#15111A":"#FF3B81");
+}
+if(window.matchMedia){ try{ matchMedia("(prefers-color-scheme: dark)").addEventListener("change",applyTheme); }catch(e){} }
+applyTheme();
 
 /* プッシュ通知 */
 function urlB64ToArr(b64){
@@ -369,7 +459,7 @@ function applyRemote(data){
       toast(`${newItemCount}件の項目が追加されました`);
     }
   }
-  if(currentListId){ renderList(); renderSuggestions(); }
+  if(currentListId){ renderList(); renderSuggestions(); renderMemo(); }
   else if(currentTab==="home") renderHome();
   else renderArchive();
 }
@@ -389,6 +479,8 @@ function mqttPublish(){
   lastPublishAt=Date.now();
   mqttClient.publish(mqttTopic(),JSON.stringify({at:lastPublishAt,lists}),{retain:true,qos:1});
 }
+let pubTimer=null;
+function mqttPublishDebounced(){ clearTimeout(pubTimer); pubTimer=setTimeout(mqttPublish,600); } // メモ入力用（連打しない）
 async function startSync(){
   if(mqttClient) return;
   await loadMQTTLib();
@@ -418,7 +510,7 @@ function toggle(id){
   const it=l.items.find(x=>x.id===id); if(!it) return;
   it.checked=!it.checked; it.checkedAt=it.checked?Date.now():0; it.at=Date.now(); l.at=Date.now();
   saveLocal(); renderList({toggledId:id}); mqttPublish();
-  if(it.checked) checkAutoArchive();
+  if(it.checked){ notifyPartner(`${meName||"パートナー"}が「${it.name}」を買いました ✓`); checkAutoArchive(); }
 }
 function checkAutoArchive(){
   const l=currentList(); if(!l||l.archived) return;
@@ -438,10 +530,17 @@ function checkAutoArchive(){
 }
 function removeItem(id){
   const l=currentList(); if(!l) return;
-  const it=l.items.find(x=>x.id===id);
+  const it=l.items.find(x=>x.id===id); if(!it) return;
+  const name=it.name, lid=l.id;
   // 常にトゥームストーン方式（オフライン削除が同期マージで復活しないように）
-  if(it){it._del=true;it._delAt=Date.now();it.at=Date.now();}
-  l.at=Date.now(); saveLocal(); renderList(); mqttPublish();
+  it._del=true;it._delAt=Date.now();it.at=Date.now();
+  l.at=Date.now(); saveLocal(); renderList(); renderSuggestions(); mqttPublish();
+  snackbar(`「${name}」を削除しました`,()=>{
+    const ll=lists.find(x=>x.id===lid); if(!ll) return;
+    const it2=ll.items.find(x=>x.id===id); if(!it2) return;
+    it2._del=false; delete it2._delAt; it2.at=Date.now(); ll.at=Date.now();
+    saveLocal(); if(currentListId===lid) renderList(); renderSuggestions(); mqttPublish();
+  });
 }
 function clearCompleted(){
   const l=currentList(); if(!l) return;
@@ -519,6 +618,21 @@ $("suggestBar").addEventListener("click",e=>{
   addItem(c.dataset.sug);
 });
 
+/* メモ欄（リストごと・同期） */
+function renderMemo(){
+  const w=$("memoWrap"); if(!w) return;
+  const l=currentList();
+  if(!l){ w.innerHTML=""; return; }
+  const ta=$("memoInput");
+  if(ta&&document.activeElement===ta){ return; } // 入力中は上書きしない
+  w.innerHTML=`<div class="memo-card"><div class="memo-label">📝 メモ</div><textarea id="memoInput" rows="2" placeholder="自由に書けます（例：予算3000円、特売は火曜）" autocomplete="off" autocorrect="off" autocapitalize="off">${esc(l.memo||"")}</textarea></div>`;
+  const t=$("memoInput");
+  if(t) t.addEventListener("input",()=>{
+    const cur=currentList(); if(!cur) return;
+    cur.memo=t.value; cur.at=Date.now(); saveLocal(); mqttPublishDebounced();
+  });
+}
+
 /* 描画：ホーム */
 function renderHome(){
   const active=lists.filter(l=>!l._del&&!l.archived);
@@ -579,7 +693,7 @@ function openList(id){
   $("listScreen").classList.remove("off");
   document.body.classList.add("on-list");
   setListVH();
-  window.scrollTo(0,0); renderList(); renderSuggestions();
+  window.scrollTo(0,0); renderList(); renderSuggestions(); renderMemo();
 }
 function goHome(){
   currentListId=null;
@@ -630,16 +744,84 @@ document.addEventListener("touchend",e=>{
   edgeSw=null;
 },{passive:true});
 
-/* スワイプ削除：リスト画面 */
+/* スワイプ削除＋長押し並び替え：リスト画面 */
 function txOf(el){const m=/translateX\(([-0-9.]+)px\)/.exec(el.style.transform||"");return m?parseFloat(m[1]):0;}
 function closeOthers(ex){listEl.querySelectorAll(".row").forEach(r=>{if(r!==ex&&txOf(r)!==0){r.style.transition="transform .25s ease";r.style.transform="translateX(0)";}});}
-listEl.addEventListener("pointerdown",e=>{const row=e.target.closest(".row");if(!row)return;sw={row,startX:e.clientX,startY:e.clientY,locked:null,base:txOf(row)};});
+
+/* --- 長押しドラッグ並び替え（iOS風に持ち上がる） --- */
+let lpTimer=null, dragging=false, drag=null;
+function blockTouch(e){ e.preventDefault(); }
+function startDrag(){
+  if(!sw||sw.locked!==null||dragging) return;
+  const row=sw.row, cell=row.closest(".cell"); if(!cell) return;
+  const id=cell.dataset.id, l=currentList();
+  const it=l&&l.items.find(x=>x.id===id);
+  if(!it||it.checked) return; // チェック済みは並び替え対象外
+  const startY=sw.startY;
+  const cells=[...listEl.querySelectorAll(".cell")].map(c=>{const r=c.getBoundingClientRect();return {id:c.dataset.id,cell:c,top:r.top,h:r.height};})
+    .filter(c=>{const x=l.items.find(y=>y.id===c.id);return x&&!x.checked;});
+  const idx=cells.findIndex(c=>c.id===id);
+  if(idx<0) return;
+  dragging=true; sw=null; suppressTap=true;
+  drag={id,cell,cells,startY,curIdx:idx};
+  cell.classList.add("dragging");
+  cells.forEach(c=>{ if(c.id!==id) c.cell.classList.add("drag-shift"); });
+  listEl.classList.add("list-dragging");
+  document.addEventListener("pointermove",dragMove,{passive:false});
+  document.addEventListener("pointerup",dragEnd);
+  document.addEventListener("pointercancel",dragEnd);
+  document.addEventListener("touchmove",blockTouch,{passive:false});
+}
+function dragMove(e){
+  if(!drag) return;
+  e.preventDefault();
+  const dy=e.clientY-drag.startY;
+  drag.cell.style.transform=`translateY(${dy}px)`;
+  const dc=drag.cells.find(c=>c.id===drag.id);
+  const center=dc.top+dc.h/2+dy;
+  let newIdx=0;
+  for(const c of drag.cells){ if(c.id===drag.id) continue; if(center>c.top+c.h/2) newIdx++; }
+  if(newIdx!==drag.curIdx){ drag.curIdx=newIdx; reflow(); }
+}
+function reflow(){
+  const dc=drag.cells.find(c=>c.id===drag.id);
+  const others=drag.cells.filter(c=>c.id!==drag.id);
+  const seq=others.slice(); seq.splice(drag.curIdx,0,dc);
+  let top=drag.cells[0].top;
+  for(const c of seq){
+    if(c.id===drag.id){ top+=c.h; continue; }
+    const shift=top-c.top;
+    c.cell.style.transform= shift? `translateY(${shift}px)`:"";
+    top+=c.h;
+  }
+}
+function dragEnd(){
+  document.removeEventListener("pointermove",dragMove);
+  document.removeEventListener("pointerup",dragEnd);
+  document.removeEventListener("pointercancel",dragEnd);
+  document.removeEventListener("touchmove",blockTouch);
+  if(drag){
+    const others=drag.cells.filter(c=>c.id!==drag.id).map(c=>c.id);
+    const seq=others.slice(); seq.splice(drag.curIdx,0,drag.id);
+    const l=currentList();
+    if(l){ seq.forEach((iid,i)=>{const x=l.items.find(y=>y.id===iid); if(x){x.order=i; x.at=Date.now();}}); l.at=Date.now(); saveLocal(); mqttPublish(); }
+    drag.cells.forEach(c=>{ c.cell.classList.remove("drag-shift"); c.cell.style.transform=""; });
+    drag.cell.classList.remove("dragging");
+  }
+  listEl.classList.remove("list-dragging");
+  dragging=false; drag=null;
+  if(currentListId) renderList();
+  setTimeout(()=>{suppressTap=false;},80);
+}
+
+listEl.addEventListener("pointerdown",e=>{const row=e.target.closest(".row");if(!row)return;sw={row,startX:e.clientX,startY:e.clientY,locked:null,base:txOf(row)};clearTimeout(lpTimer);lpTimer=setTimeout(startDrag,450);});
 listEl.addEventListener("pointermove",e=>{
+  if(dragging) return;
   if(!sw)return; const dx=e.clientX-sw.startX,dy=e.clientY-sw.startY;
-  if(sw.locked===null){if(Math.abs(dx)>8&&Math.abs(dx)>Math.abs(dy)){sw.locked="h";try{sw.row.setPointerCapture(e.pointerId);}catch(_){}}else if(Math.abs(dy)>8)sw.locked="v";}
+  if(sw.locked===null){ if(Math.abs(dx)>8||Math.abs(dy)>8) clearTimeout(lpTimer); if(Math.abs(dx)>8&&Math.abs(dx)>Math.abs(dy)){sw.locked="h";try{sw.row.setPointerCapture(e.pointerId);}catch(_){}}else if(Math.abs(dy)>8)sw.locked="v"; }
   if(sw.locked==="h"){sw.row.style.transition="none";sw.row.style.transform=`translateX(${Math.max(-76,Math.min(0,sw.base+dx))}px)`;e.preventDefault();}
 });
-function endSwipe(){if(!sw)return;if(sw.locked==="h"){const open=txOf(sw.row)<=-38;sw.row.style.transition="transform .25s ease";sw.row.style.transform=`translateX(${open?-72:0}px)`;closeOthers(open?sw.row:null);suppressTap=true;setTimeout(()=>suppressTap=false,60);}sw=null;}
+function endSwipe(){clearTimeout(lpTimer);if(!sw)return;if(sw.locked==="h"){const open=txOf(sw.row)<=-38;sw.row.style.transition="transform .25s ease";sw.row.style.transform=`translateX(${open?-72:0}px)`;closeOthers(open?sw.row:null);suppressTap=true;setTimeout(()=>suppressTap=false,60);}sw=null;}
 listEl.addEventListener("pointerup",endSwipe); listEl.addEventListener("pointercancel",endSwipe);
 listEl.addEventListener("click",e=>{
   const t=e.target.closest("[data-act]"); if(!t) return;
@@ -668,10 +850,16 @@ listsWrap.addEventListener("click",e=>{
   const t=e.target.closest("[data-act]"); if(!t) return;
   const act=t.dataset.act,listid=t.dataset.listid;
   if(act==="listdel"){
-    if(confirm("このリストを削除しますか？")){
-      const l=lists.find(x=>x.id===listid);
-      if(l){l._del=true;l._delAt=Date.now();l.at=Date.now();}
+    const l=lists.find(x=>x.id===listid);
+    if(l){
+      const nm=l.name;
+      l._del=true;l._delAt=Date.now();l.at=Date.now();
       saveLocal(); mqttPublish(); renderHome();
+      snackbar(`「${nm}」を削除しました`,()=>{
+        const ll=lists.find(x=>x.id===listid); if(!ll) return;
+        ll._del=false; delete ll._delAt; ll.at=Date.now();
+        saveLocal(); mqttPublish(); if(currentTab==="home") renderHome(); else renderArchive();
+      });
     }
     return;
   }
@@ -771,10 +959,14 @@ $("editListBtn").addEventListener("click",()=>{
     saveLocal(); mqttPublish(); closeSheet();
   });
   $("delListBtn").addEventListener("click",()=>{
-    if(confirm(`「${l.name}」を削除しますか？`)){
-      l._del=true;l._delAt=Date.now();l.at=Date.now();
-      saveLocal(); mqttPublish(); closeSheet(); goHome();
-    }
+    const lid=l.id, nm=l.name;
+    l._del=true;l._delAt=Date.now();l.at=Date.now();
+    saveLocal(); mqttPublish(); closeSheet(); goHome();
+    snackbar(`「${nm}」を削除しました`,()=>{
+      const ll=lists.find(x=>x.id===lid); if(!ll) return;
+      ll._del=false; delete ll._delAt; ll.at=Date.now();
+      saveLocal(); mqttPublish(); if(currentTab==="home") renderHome(); else renderArchive();
+    });
   });
   sheet.querySelector('[data-act="close"]')?.addEventListener("click",closeSheet);
 });
@@ -786,6 +978,7 @@ $("syncBtn").addEventListener("click",()=>{
     <h3>同期設定</h3>
     <div class="syncbox on"><div class="syncrow"><span>リアルタイム同期</span><span class="sv">${CLOUD?"接続中 ✓":"接続中…"}</span></div></div>
     <div class="field"><label>ルームコード（パートナーに教える）</label><div class="roomcode">${roomId.slice(0,4)}-${roomId.slice(4)}</div></div>
+    <div class="qrbox"><img id="qrImg" alt="QRコード" onerror="this.style.display='none';this.nextElementSibling.textContent='QRの読み込みに失敗（ネット接続を確認）。コード入力でも参加できます';"><div class="qrnote">パートナーはこのQRをiPhoneのカメラで読み取るだけで参加できます</div></div>
     <button class="btn pink" id="copyBtn">ルームコードをコピー</button>
     <div class="gap"></div>
     <button class="btn ghost" id="enablePushBtn">🔔 通知を有効にする</button>
@@ -809,6 +1002,8 @@ $("syncBtn").addEventListener("click",()=>{
     <div class="gap"></div>
     <button class="btn sub" data-act="close">閉じる</button>
   `);
+  const qr=document.getElementById("qrImg");
+  if(qr){ const joinUrl=location.href.split("#")[0].split("?")[0]+"?room="+roomId; qr.src="https://api.qrserver.com/v1/create-qr-code/?size=240x240&margin=0&data="+encodeURIComponent(joinUrl); }
   const ci=document.getElementById("codeInput");
   if(ci) ci.addEventListener("input",()=>{let v=ci.value.replace(/[^A-Z0-9]/gi,"").toUpperCase().slice(0,8);ci.value=v.length>4?v.slice(0,4)+"-"+v.slice(4):v;});
   document.getElementById("createBtn")?.addEventListener("click",async()=>{
@@ -872,12 +1067,31 @@ $("gear").addEventListener("click",()=>{
     <div class="field"><label>あなたの名前</label>
       <input id="meName" value="${esc(meName)}" placeholder="自分" maxlength="8"
              autocomplete="off" autocorrect="off" autocapitalize="off"></div>
+    <div class="field"><label>テーマ</label>
+      <div class="theme-seg" id="themeSeg">
+        <button type="button" data-theme="auto">自動</button>
+        <button type="button" data-theme="light">ライト</button>
+        <button type="button" data-theme="dark">ダーク</button>
+      </div>
+    </div>
     <button class="btn ghost" data-act="opentrash">🗑 ゴミ箱${trashCount>0?`（${trashCount}）`:""}</button>
     <div class="gap"></div>
     <button class="btn sub" data-act="close">閉じる</button>
   `);
   const m=document.getElementById("meName");
   if(m) m.addEventListener("input",()=>{meName=m.value.trim();localStorage.setItem("kaimono_me",meName);});
+  const curTheme=(()=>{try{return localStorage.getItem("kaimono_theme")||"auto";}catch(e){return "auto";}})();
+  const seg=document.getElementById("themeSeg");
+  if(seg){
+    seg.querySelectorAll("button").forEach(b=>{
+      b.classList.toggle("on",b.dataset.theme===curTheme);
+      b.addEventListener("click",()=>{
+        try{localStorage.setItem("kaimono_theme",b.dataset.theme);}catch(e){}
+        seg.querySelectorAll("button").forEach(x=>x.classList.toggle("on",x===b));
+        applyTheme();
+      });
+    });
+  }
   sheet.querySelector('[data-act="opentrash"]')?.addEventListener("click",openTrash);
   sheet.querySelector('[data-act="close"]')?.addEventListener("click",closeSheet);
 });
@@ -899,6 +1113,20 @@ sweepAutoArchive();
 renderHome();
 if(roomId) startSync();
 initPush().then(()=>autoResubscribe()); // 起動時に購読を自己修復（古い鍵の購読を自動で作り直す）
+
+/* QRリンク（?room=XXXX）からの参加 */
+(function joinFromUrl(){
+  try{
+    const p=new URLSearchParams(location.search).get("room");
+    if(!p) return;
+    const code=p.replace(/[^A-Z0-9]/gi,"").toUpperCase();
+    try{ history.replaceState(null,"",location.pathname); }catch(e){}
+    if(code.length!==8||code===roomId) return;
+    const go=()=>{ if(mqttClient) stopSync(); roomId=code; localStorage.setItem("kaimono_room",roomId); remoteAt=0; startSync().then(()=>{ toast("QRのルームに参加しました！"); autoResubscribe(); }).catch(()=>toast("参加に失敗しました")); };
+    if(!roomId) go();
+    else setTimeout(()=>{ if(confirm("QRのルームに参加しますか？（今のルームから切り替わります）")) go(); },400);
+  }catch(e){}
+})();
 </script>
 </body>
 </html>
